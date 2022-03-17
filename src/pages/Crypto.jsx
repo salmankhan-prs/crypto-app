@@ -15,6 +15,8 @@ import {
   Filler,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import Dashboard from "../components/Dashboard";
+import Helmet from "react-helmet";
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -122,65 +124,15 @@ const Crypto = () => {
     getDetails();
     getHistoryDetails();
   }, []);
-  if (!coindata) {
-    return <h1>Nothing found ....</h1>;
-  }
+
   return (
     <>
+      <Helmet>
+        <title>{params.id} | Crypto APP</title>
+      </Helmet>
+      <Dashboard id={params.id} />
       {coindata && (
         <>
-          <section class="hero is-medium is-link">
-            <Link to="/">
-              <button class="m-3 button is-light">BACK</button>
-            </Link>
-            <div class="hero-body">
-              <div className="columns">
-                <div className="column mx-5">Rank #{coindata.assests.rank}</div>
-                <figure class="image is-64x64">
-                  <img
-                    class="is-rounded"
-                    src={`https://assets.coincap.io/assets/icons/${coindata.assests.symbol.toLowerCase()}@2x.png`}
-                  />
-                </figure>
-              </div>
-              <p class="title">
-                {coindata.assests.name}({coindata.assests.symbol})
-              </p>
-              <div className="columns">
-                <div className="column">
-                  <p class="subtitle">
-                    Volume(24Hr):
-                    {numeral(coindata.assests.volumeUsd24Hr).format(
-                      "($ 0.00 a)"
-                    )}{" "}
-                  </p>
-                </div>
-                <div className="column">
-                  <p class="subtitle">
-                    supply:
-                    {numeral(coindata.assests.supply).format("($0.00 a)")}{" "}
-                    {coindata.assests.symbol}{" "}
-                  </p>
-                </div>
-              </div>
-              <div className="columns">
-                <div className="column">
-                  <p class="subtitle">
-                    Price:
-                    {numeral(coindata.assests.priceUsd).format("$0,0.00")}{" "}
-                  </p>
-                </div>
-                <div className="column">
-                  <p class="subtitle">
-                    Market Cap:
-                    {numeral(coindata.assests.marketCapUsd).format(
-                      "($0.00 a)"
-                    )}{" "}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
           <div className="container mt-5">
             {additionalDetails && (
               <>
@@ -227,6 +179,33 @@ const Crypto = () => {
               </div>
             </div>
           </div>
+          <section className="container mt-5">
+            <table
+              className="table is-bordered is-striped is-narrow is-hoverable is-fullwidth
+"
+            >
+              <thead>
+                <th>baseId</th>
+                <th>exchangeId</th>
+                <th>priceUsd</th>
+                <th>quoteId</th>
+                <th>volumePercent</th>
+                <th>volumeUsd24Hr</th>
+              </thead>
+              <tbody>
+                {coindata.markets.map((item) => (
+                  <tr>
+                    <td>{item.baseId}</td>
+                    <td>{item.exchangeId}</td>
+                    <td>{Number(item.priceUsd).toFixed(2)}</td>
+                    <td>{item.quoteId}</td>
+                    <td>{Number(item.volumePercent).toFixed(2)}%</td>
+                    <td>{Number(item.volumeUsd24Hr).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
         </>
       )}
     </>

@@ -1,22 +1,45 @@
 import React from "react";
 
 import axios from "axios";
+import { QueryClientProvider, QueryClient, useQuery } from "react-query";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 const Home = () => {
-  const [assests, setAssests] = useState(null);
+  // const [assests, setAssests] = useState(null);
   const [livedata, setLiveData] = useState(null);
   const [search, setSearch] = useState("");
-  const getCryptoAssestsData = async () => {
-    const { data } = await axios.get("https://api.coincap.io/v2/assets");
-    console.log(data);
-    setAssests(data);
-  };
-  const tradeWs = new WebSocket("wss://ws.coincap.io/trades/binance");
+
+  const {
+    isLoading,
+    data: assests,
+    error,
+    isError,
+  } = useQuery(
+    "all-crypto",
+    () => {
+      return axios.get("https://api.coincap.io/v2/assets");
+    },
+    {
+      select: (data) => data.data,
+    }
+  );
+
+  // const tradeWs = new WebSocket("wss://ws.coincap.io/trades/binance");
 
   // tradeWs.onmessage = function (msg) {
   //   setLiveData(msg.data);
   // };
+
+  if (isLoading) {
+    return (
+      <div className="mt-9 w-auto box columns  is-vcentered">
+        <progress className="progress is-small is-primary" max="100">
+          15%
+        </progress>
+      </div>
+    );
+  }
   const handleSearch = (e) => {
     setSearch(e.target.value);
     // setSearchAssests(assests);
@@ -26,12 +49,11 @@ const Home = () => {
     // searchAssests.data = filterData;
   };
 
-  useEffect(() => {
-    getCryptoAssestsData();
-  }, []);
-
   return (
     <div>
+      <Helmet>
+        <title>crypto App | Home</title>
+      </Helmet>
       <section className="hero is-success is-halfheight">
         <div className="hero-body">
           <div className="mx-auto">
@@ -54,7 +76,7 @@ const Home = () => {
       </section>
       <section>
         <div className="is-flex columns is-justify-content-space-between	  is-flex-direction-row	is-flex-wrap-wrap	">
-          {assests ? (
+          {assests &&
             assests.data
               .filter((data) => data.name.toLowerCase().includes(search))
               .map((data) => (
@@ -96,16 +118,13 @@ const Home = () => {
                           }`}
                         >
                           Change Percent in 24 Hr:{" "}
-                          {Math.round(data.changePercent24Hr)}%
+                          {Number(data.changePercent24Hr).toFixed(2)}%
                         </h1>
                       </div>
                     </div>
                   </Link>
                 </div>
-              ))
-          ) : (
-            <h1>Not found ....</h1>
-          )}
+              ))}
         </div>
       </section>
       {livedata && (
