@@ -16,6 +16,20 @@ function App() {
             <Route path="/" element={<Home />}></Route>
             <Route path="/crypto/:id" element={<Crypto />}></Route>
           </Routes>
+          <footer className="footer">
+            <div className="content has-text-centered">
+              <p>
+                This Project is made with{" "}
+                <span role="img" aria-label="heart">
+                  ❤️
+                </span>{" "}
+                by{" "}
+                <a href="https://twitter.com/salmanKhanprs" target="_blank">
+                  Salman Khan
+                </a>
+              </p>
+            </div>
+          </footer>
         </Router>
       </QueryClientProvider>
     </>

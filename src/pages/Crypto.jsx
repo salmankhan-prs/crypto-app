@@ -17,6 +17,7 @@ import {
 import { Line } from "react-chartjs-2";
 import Dashboard from "../components/Dashboard";
 import Helmet from "react-helmet";
+import { useQuery } from "react-query";
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -33,6 +34,7 @@ const Crypto = () => {
   const [historyTime, setHistoryTime] = useState(null);
   const [historyData, setHistoryData] = useState(null);
   const [additionalDetails, setAdditionalDetails] = useState(null);
+  const [realTimeData, setRealTimeData] = useState(null);
   const params = useParams();
   const coincapApi = axios.create({
     baseURL: "https://api.coincap.io/v2/",
@@ -56,6 +58,27 @@ const Crypto = () => {
       },
     },
   };
+  const {
+    isLoading,
+    data: assests,
+    error,
+    isError,
+  } = useQuery(
+    "all-crypto",
+    () => {
+      return axios.get("https://api.coincap.io/v2/assets");
+    },
+    {
+      select: (data) =>
+        data.data.data.map((data) => {
+          return { id: data.id, priceUsd: data.priceUsd };
+        }),
+    }
+  );
+  useEffect(() => {
+    setRealTimeData(assests);
+  }, [assests]);
+
   const getDetails = async () => {
     const [assests, markets, rates] = await Promise.all([
       coincapApi.get(`/assets/${params.id}`),
@@ -69,8 +92,6 @@ const Crypto = () => {
       rates: rates.data,
     };
     setCoinData(data);
-    console.log(data);
-    console.log(numeral(2000000).format("($ 0.00 a)"));
   };
   const getHistoryDetails = async () => {
     const { data } = await coincapApi.get(
@@ -97,7 +118,6 @@ const Crypto = () => {
     setHistoryTime(newData);
     setHistoryData(data.data);
   };
-  //   setInterval(getHistoryDetails, 100000);
 
   const labels = historyTime && historyTime;
   const data = {
@@ -120,6 +140,7 @@ const Crypto = () => {
       },
     ],
   };
+
   useEffect(() => {
     getDetails();
     getHistoryDetails();
@@ -179,22 +200,25 @@ const Crypto = () => {
               </div>
             </div>
           </div>
-          <section className="container mt-5">
+          <section className="table-container mt-5">
+            <h2 className="is-centered title">Exchange Prices:</h2>
             <table
               className="table is-bordered is-striped is-narrow is-hoverable is-fullwidth
 "
             >
               <thead>
-                <th>baseId</th>
-                <th>exchangeId</th>
-                <th>priceUsd</th>
-                <th>quoteId</th>
-                <th>volumePercent</th>
-                <th>volumeUsd24Hr</th>
+                <tr>
+                  <th>baseId</th>
+                  <th>exchangeId</th>
+                  <th>priceUsd</th>
+                  <th>quoteId</th>
+                  <th>volumePercent</th>
+                  <th>volumeUsd24Hr</th>
+                </tr>
               </thead>
               <tbody>
                 {coindata.markets.map((item) => (
-                  <tr>
+                  <tr key={item.priceUsd}>
                     <td>{item.baseId}</td>
                     <td>{item.exchangeId}</td>
                     <td>{Number(item.priceUsd).toFixed(2)}</td>

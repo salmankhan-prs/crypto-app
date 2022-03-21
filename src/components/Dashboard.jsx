@@ -5,6 +5,8 @@ import { Link } from "react-router-dom";
 import numeral from "numeral";
 const Dashboard = ({ id }) => {
   const [previousPrice, setPreviousPrice] = useState(null);
+  const [currentPrice, setCurrentPrice] = useState(null);
+  const [time, setTime] = useState(false);
   const queryClient = useQueryClient();
   const {
     isLoading,
@@ -24,7 +26,7 @@ const Dashboard = ({ id }) => {
         const singleCrypto = queryClient
           .getQueryData("all-crypto")
           ?.data?.data?.find((crypto) => (crypto.id = id));
-        console.log(singleCrypto);
+
         if (singleCrypto) {
           return { data: singleCrypto };
         } else {
@@ -34,39 +36,67 @@ const Dashboard = ({ id }) => {
       refetchInterval: 10000,
     }
   );
+  useEffect(() => {
+    setCurrentPrice({ id, price: assests?.priceUsd });
+    setPreviousPrice({ id, price: assests?.priceUsd });
+  }, [assests]);
+  const getRealTimeData = () => {
+    const pricesWs = new WebSocket("wss://ws.coincap.io/prices?assets=" + id);
 
-  console.log(isPreviousData);
-  console.log(keepPreviousData);
+    pricesWs.onmessage = function (msg) {
+      setTime(true);
+      const data = JSON.parse(msg.data);
+      const price = data[id];
+      const ob = {
+        id,
+        price,
+      };
+
+      setPreviousPrice(ob);
+
+      setCurrentPrice(ob);
+
+      setTimeout(() => {
+        setTime(false);
+      }, 10);
+    };
+    return () => pricesWs.close();
+  };
+
+  //websocket for realtime data
+  useEffect(getRealTimeData, []);
+
   return (
     <>
       {assests && (
         <>
-          <section class="hero is-medium is-link">
+          <section className="hero is-medium is-link">
             <Link to="/">
-              <button class="m-3 button is-light">BACK</button>
+              <button className="m-3 button is-light">BACK</button>
             </Link>
-            <div class="hero-body">
+            <div className="hero-body">
               <div className="columns">
                 <div className="column mx-5">Rank #{assests.rank}</div>
-                <figure class="image is-64x64">
+
+                <figure className="image is-64x64">
                   <img
-                    class="is-rounded"
+                    className="is-rounded"
                     src={`https://assets.coincap.io/assets/icons/${assests?.symbol?.toLowerCase()}@2x.png`}
                   />
                 </figure>
               </div>
-              <p class="title">
+              <p className="title">
                 {assests.name}({assests.symbol})
               </p>
               <div className="columns">
                 <div className="column">
-                  <p class="subtitle">
+                  <p className="subtitle">
                     Volume(24Hr):
                     {numeral(assests.volumeUsd24Hr).format("($ 0.00 a)")}{" "}
                   </p>
                 </div>
                 <div className="column">
-                  <p class="subtitle">
+                  <p className="subtitle">
                     supply:
                     {numeral(assests.supply).format("(0.00 a)")}{" "}
                     {assests.symbol}{" "}
@@ -75,13 +105,22 @@ const Dashboard = ({ id }) => {
               </div>
               <div className="columns">
                 <div className="column">
-                  <p class="subtitle">
+                  <p className="subtitle is-selected">
                     Price:
-                    {numeral(assests.priceUsd).format("$0,0.00")}{" "}
+                    {numeral(
+                      currentPrice != null
+                        ? currentPrice?.price
+                        : assests?.priceUsd
+                    ).format("$0,0.00")}{" "}
+                    {currentPrice !== null &&
+                    time == true &&
+                    Number(currentPrice.price) < Number(previousPrice?.price)
+                      ? "↑"
+                      : "↓"}
                   </p>
                 </div>
                 <div className="column">
-                  <p class="subtitle">
+                  <p className="subtitle">
                     Market Cap:
                     {numeral(assests.marketCapUsd).format("($0.00 a)")}{" "}
                   </p>
