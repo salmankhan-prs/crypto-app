@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Crypto App",
+  "name": "A simple web app to view live crypto coin prices",
   "icons": [
     {
       "src": "favicon.ico",
